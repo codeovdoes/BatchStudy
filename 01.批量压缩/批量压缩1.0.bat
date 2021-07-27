@@ -1,5 +1,6 @@
-@echo off&chcp 936&title 批量压缩&color 0a&Setlocal Enabledelayedexpansion&mode con cols=80 lines=30
-
+@echo off&chcp 936&color 0a&Setlocal Enabledelayedexpansion&mode con cols=80 lines=30
+set Version=1.0
+title 批量压缩 %Version%
 set /p input=请输入压缩文件加密的密码，不加密填0:
 if %input%==0 (set secrets=) else (set secrets=-hp%input%)
 
@@ -32,7 +33,7 @@ for /f "delims=" %%a in ('dir %unziphome% /ad/b') do (
 	    rem 遍历unzip 中文件是否在对应 zip目录下存在，若存在则跳过，不存在则执行压缩
 	    for /f %%i in ('dir !unzipdir! /b /on') do (
 	       
-	        rem 当前开启压缩进程数量
+	       rem 当前开启压缩进程数量
                        for /f %%d in ('qprocess^|find /i /c /n "WinRAR.exe"') do (
                            set qps=%%d
                         )
@@ -43,20 +44,29 @@ for /f "delims=" %%a in ('dir %unziphome% /ad/b') do (
  	    rem 当前没有占用WinRAR 才会使用
 	    if !qps!==0 (	    
 	        rem 判断该文件是否在对应文件夹中，如果不存在则压缩，存在则跳过
-	        if not exist !target! (start winrar a -k -ep1 -ibck -m5 !secrets! !target! !source!)
+	        if not exist !target! (start winrar a -k -ep1 -ibck -m5 !secrets! !target! !source! & echo %%i) else (echo %%i 已被压缩，此次跳过)
 	        rem echo start winrar a -k -ep1 -ibck -m5 !secrets! !target! !source!
-	        if !errorlevel!==0 (echo %%i & echo %%i >> success!date!.log) else (
+	        if !errorlevel!==0 (echo %%i >> success!date!.log) else (
 	    	echo %%i 压缩错误. 错误代码:  !errorlevel!   错误时间:  !time!  >> error!date!.log
 		echo ---------------------------------------- >> error!date!.log 
 	        )
 	     ) else (
-		set i=%%i 
-		echo !i! 
+
+                                rem 判断该文件是否在对应文件夹中，如果不存在则压缩，存在则跳过
+	                if not exist !target! (start winrar a -k -ep1 -ibck -m5 !secrets! !target! !source! & echo %%i)
+	                rem echo start winrar a -k -ep1 -ibck -m5 !secrets! !target! !source!
+	                if !errorlevel!==0 (echo %%i >> success!date!.log) else (
+	    	echo %%i 压缩错误. 错误代码:  !errorlevel!   错误时间:  !time!  >> error!date!.log
+		echo ---------------------------------------- >> error!date!.log 
+	                )
+
+		rem 原意是想将超过设置进程数的任务等待于队列中。暂时不会。就人工等等
+		timeout !qps! > nul
 		)				
   	    )
 )
 echo ********** 全部目录均已压缩完毕 **********
 echo ********** 全部目录均已压缩完毕 ********** >> success!date!.log
-timeout 3
+timeout 3 >nul
 rem cls
 pause:>nul 
