@@ -22,18 +22,24 @@ for /f "delims=" %%a in ('dir %ziphome% /ad/b') do (
 	
 	rem 查找对应的 unzip目录 如果不存在则创建，否则比对两个目录文件
 
-	set zipdir=!ziphome!\!b!
-	set unzipdir=!unziphome!\!b!
+	set zipdir=!ziphome!\!b!\
+	set unzipdir=!unziphome!\!b!\
 
 	if not exist !unzipdir! (mkdir !unzipdir!) 
 
 	echo ********* 开始目录 !unzipdir! 中文件 ********** 
 	echo ********* 开始目录 !unzipdir! 中文件 ********** >> successUNZIP!date!.log
-	start winrar e !secrets! *.zip !unzipdir!
+
+	        
+	        set target=!unzipdir!
+	        set source=!zipdir!*.zip
 	
+	        start winrar e !secrets! -ibck -o+ !source! !target!
+
 )
 echo ********** 全部目录均已解压完毕 **********
 echo ********** 全部目录均已解压完毕 ********** >> successUNZIP!date!.log
+echo 提示：解压工作进程已经开启，还需等待进程结束。
 timeout 3 >nul
 rem cls
 pause:>nul 
